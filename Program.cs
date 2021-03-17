@@ -14,7 +14,7 @@ namespace CityWeather
         static void Main(string[] args)
         {
             var cityForecasts = new List<CityWeather>();
-            string[] cities = { "Omaha", "San Jose" };
+            string[] cities = { "Omaha", "Denver", "San Jose", "Phoenix", "Miami", "Boston" };
             
             //cityForecasts.Add(new CityWeather("Denver"));
             //cityForecasts.Add(new CityWeather("San Jose"));
@@ -40,16 +40,16 @@ namespace CityWeather
 
                     //var cityNameJO = WeatherForecastJO["name"];
                     var windSpeedJO = (int)WeatherForecastJO["wind"]["speed"];
-                    //var temperatureJO = WeatherForecastJO["main"]["temp"];
-                    //var feelsLikeJO = WeatherForecastJO["main"]["feels_like"];
-                    //var visibilityJO = WeatherForecastJO["visibility"];
-                    //var humidityJO = WeatherForecastJO["main"]["humidity"];
+                    var temperatureJO = (float)WeatherForecastJO["main"]["temp"];
+                    var feelsLikeJO = (float)WeatherForecastJO["main"]["feels_like"];
+                    var visibilityJO = (int)WeatherForecastJO["visibility"];
+                    var humidityJO = (int)WeatherForecastJO["main"]["humidity"];
 
                     // Test JObject Output
                     // Console.WriteLine(WeatherForecastJO);
 
 
-                    cityForecasts.Add(new CityWeather(city, windSpeedJO));
+                    cityForecasts.Add(new CityWeather(city, windSpeedJO, temperatureJO, feelsLikeJO, visibilityJO, humidityJO));
 
 
                     //Console.WriteLine($"Here's the forecast for {cityNameJO}: " +
@@ -75,31 +75,37 @@ namespace CityWeather
         {
             private string _cityName;
             private int _windSpeed;
-            //private float _temperatureF;
-            //private float _feelsLike;
-            //private int _visibility;
-            //private int _humidity;
+            private float _temperatureF;
+            private float _feelsLike;
+            private int _visibility;
+            private int _humidity;
 
             public CityWeather(
-                string cityName,
-            int windSpeed)
-            //float temperatureF,
-            //float feelsLike,
-            //int visibility,
-            //int humidity)
+
+            string cityName,
+            int windSpeed,
+            float temperatureF,
+            float feelsLike,
+            int visibility,
+            int humidity)
+
             {
                 _cityName = cityName;
                 _windSpeed = windSpeed;
-                //_temperatureF = temperatureF;
-                //_feelsLike = feelsLike;
-                //_visibility = visibility;
-                //_humidity = humidity;
+                _temperatureF = temperatureF;
+                _feelsLike = feelsLike;
+                _visibility = visibility;
+                _humidity = humidity;
 
             }
 
             public override string ToString()
             {
-                return $"{_cityName}";
+
+                return $"Here's the forecast for {_cityName}: The temperature is {_temperatureF}F, but feels like {_feelsLike}F. " +
+                    $"The windspeed is currently {_windSpeed} mph, with visibility at {_visibility}. " +
+                    $"Lastly, the humidity is at {_humidity}%.";
+            
             }
             public string getCityName()
 
