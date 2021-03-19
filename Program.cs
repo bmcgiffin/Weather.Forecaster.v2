@@ -1,10 +1,13 @@
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 
 
 namespace CityWeather
@@ -15,7 +18,7 @@ namespace CityWeather
         {
             var cityForecasts = new List<CityWeather>();
             string[] cities = { "Omaha", "Denver", "San Jose", "Phoenix", "Miami", "Boston" };
-            
+
             //cityForecasts.Add(new CityWeather("Denver"));
             //cityForecasts.Add(new CityWeather("San Jose"));
             //cityForecasts.Add(new CityWeather("Phoenix"));
@@ -25,7 +28,7 @@ namespace CityWeather
             foreach (var city in cities)
             {
                 var apiCall = "https://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=a6bf3dc24cf54af353aa915b839e088a&units=imperial";
-                
+
                 HttpClient client = new HttpClient();
                 var responseTask = client.GetAsync(apiCall);
                 responseTask.Wait();
@@ -60,7 +63,7 @@ namespace CityWeather
 
                 else
 
-                {                    
+                {
                     Console.WriteLine("Sorry. Something must have went wrong.");
                 }
             }
@@ -68,54 +71,58 @@ namespace CityWeather
             {
                 Console.WriteLine(city);
             }
-            Console.ReadLine();
+
+            NewRelic.PostToNewRelic(cityForecasts);
         }
 
-        class CityWeather
+        public class CityWeather
         {
-            private string _cityName;
-            private int _windSpeed;
-            private float _temperatureF;
-            private float _feelsLike;
-            private int _visibility;
-            private int _humidity;
+            public string eventType { get; set; }
+            public string cityName { get; set; }
+            public int windSpeed { get; set; }
+            public float temperatureF { get; set; }
+            public float feelsLike { get; set; }
+            public int visibility { get; set; }
+            public int humidity { get; set; }
+
 
             public CityWeather(
-
-            string cityName,
-            int windSpeed,
-            float temperatureF,
-            float feelsLike,
-            int visibility,
-            int humidity)
+            
+            string _cityName,
+            int _windSpeed,
+            float _temperatureF,
+            float _feelsLike,
+            int _visibility,
+            int _humidity)
 
             {
-                _cityName = cityName;
-                _windSpeed = windSpeed;
-                _temperatureF = temperatureF;
-                _feelsLike = feelsLike;
-                _visibility = visibility;
-                _humidity = humidity;
+                eventType = "bm_test2";
+                cityName = _cityName;
+                windSpeed = _windSpeed;
+                temperatureF = _temperatureF;
+                feelsLike = _feelsLike;
+                visibility = _visibility;
+                humidity = _humidity;
 
             }
 
             public override string ToString()
             {
 
-                return $"Here's the forecast for {_cityName}: The temperature is {_temperatureF}F, but feels like {_feelsLike}F. " +
-                    $"The windspeed is currently {_windSpeed} mph, with visibility at {_visibility}. " +
-                    $"Lastly, the humidity is at {_humidity}%.";
-            
+                return $"Here's the forecast for {cityName}: The temperature is {temperatureF}F, but feels like {feelsLike}F. " +
+                    $"The windspeed is currently {windSpeed} mph, with visibility at {visibility}. " +
+                    $"Lastly, the humidity is at {humidity}%.";
+
             }
             public string getCityName()
 
             {
-                return _cityName;
+                return cityName;
             }
 
             public int getWindSpeed()
             {
-                return _windSpeed;
+                return windSpeed;
             }
 
             //public float getTemperatureF()
@@ -137,5 +144,57 @@ namespace CityWeather
 
 
         }
+
+        public static class NewRelic
+        {
+            public static void PostToNewRelic(List<CityWeather> results)
+            {
+                //new Relic info 
+                string myAccountID = "X";
+                string myInsertKey = "X";
+                string newRelicUrl = "https://insights-collector.newrelic.com/v1/accounts/" + myAccountID + "/events";
+                string jsonString = JsonSerializer.Serialize(results);
+                Console.WriteLine(jsonString); 
+
+
+
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(newRelicUrl);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Headers.Add("X-Insert-Key", myInsertKey);
+                httpWebRequest.Headers.Add("Accept-Encoding", "gzip");
+                httpWebRequest.Method = "POST";
+
+
+                
+
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    streamWriter.Write(jsonString);
+                }
+
+
+
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                {
+                    var result = streamReader.ReadToEnd();
+                }
+
+
+
+                if (httpResponse.StatusCode == HttpStatusCode.OK)
+                {
+                    Console.WriteLine("Data sent to new relic");
+                }
+                else
+                {
+                    Console.Write("Error received when publishing to New Relic.\n{0}", httpResponse.StatusCode);
+                }
+
+
+
+            }
+        }
     }
 }
+
